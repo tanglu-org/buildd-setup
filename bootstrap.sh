@@ -17,6 +17,8 @@ export DEVEL=chromodoris
 
 mkdir -p /srv/buildd/chroots
 
+export MIRROR="http://archive.tanglu.org/tanglu"
+
 for ARCH in i386 amd64; do
 
     export $ARCH
@@ -28,7 +30,7 @@ for ARCH in i386 amd64; do
         --make-sbuild-tarball=/srv/buildd/chroots/${STABLE}-${ARCH}.tar.gz \
         ${STABLE} \
         /srv/buildd/chroots/${STABLE}-${ARCH} \
-        http://archive.tanglu.org/tanglu
+        $MIRROR
 
     sbuild-createchroot --arch=${ARCH} \
         --components="main,contrib,non-free" \
@@ -37,7 +39,7 @@ for ARCH in i386 amd64; do
         --make-sbuild-tarball=/srv/buildd/chroots/${DEVEL}-${ARCH}.tar.gz \
         ${DEVEL} \
         /srv/buildd/chroots/${DEVEL}-${ARCH} \
-        http://archive.tanglu.org/tanglu
+        $MIRROR
 
     cp -a /srv/buildd/chroots/${DEVEL}-${ARCH} /srv/buildd/chroots/staging-${ARCH}
 
@@ -47,10 +49,10 @@ for ARCH in i386 amd64; do
         echo force-unsafe-io >/srv/buildd/chroots/${SUITE}-${ARCH}/etc/dpkg/dpkg.cfg.d/90sbuild
     done
 
-    echo "deb http://archive.tanglu.org/tanglu ${STABLE}-updates main contrib non-free"     >>/srv/buildd/chroots/${STABLE}-${ARCH}/etc/apt/sources.list
-    echo "deb-src http://archive.tanglu.org/tanglu ${STABLE}-updates main contrib non-free" >>/srv/buildd/chroots/${STABLE}-${ARCH}/etc/apt/sources.list
-    echo "deb http://archive.tanglu.org/tanglu staging main contrib non-free"     >>/srv/buildd/chroots/staging-${ARCH}/etc/apt/sources.list
-    echo "deb-src http://archive.tanglu.org/tanglu staging main contrib non-free" >>/srv/buildd/chroots/staging-${ARCH}/etc/apt/sources.list
+    echo "deb ${MIRROR} ${STABLE}-updates main contrib non-free"     >>/srv/buildd/chroots/${STABLE}-${ARCH}/etc/apt/sources.list
+    echo "deb-src ${MIRROR} ${STABLE}-updates main contrib non-free" >>/srv/buildd/chroots/${STABLE}-${ARCH}/etc/apt/sources.list
+    echo "deb ${MIRROR} staging main contrib non-free"     >>/srv/buildd/chroots/staging-${ARCH}/etc/apt/sources.list
+    echo "deb-src ${MIRROR} staging main contrib non-free" >>/srv/buildd/chroots/staging-${ARCH}/etc/apt/sources.list
 
     mv /etc/schroot/chroot.d/${STABLE}-${ARCH}-sbuild-* /etc/schroot/chroot.d/${STABLE}-${ARCH}
     cp /etc/schroot/chroot.d/${STABLE}-${ARCH} /etc/schroot/chroot.d/${STABLE}-updates-${ARCH}
