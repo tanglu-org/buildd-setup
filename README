@@ -1,0 +1,4 @@
+=== Vagrant configuration for a tanglu buildd ===
+
+To use this you will need to add a tanglu box first, e.g.:
+http://yofel.net/tanglu/vagrant/tanglu-2.0-amd64.box
