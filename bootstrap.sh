@@ -85,7 +85,7 @@ if [ -e /vagrant/keys ]; then
 
     cp /vagrant/keys/sbuild-key.pub /var/lib/sbuild/apt-keys/
     cp /vagrant/keys/sbuild-key.sec /var/lib/sbuild/apt-keys/
-    chown sbuild: -R /var/lib/sbuild/apt-keys/*
+    chown buildd:sbuild -R /var/lib/sbuild/apt-keys/*
     chmod go-rwx /var/lib/sbuild/apt-keys/sbuild-key.sec
 
     sudo -u buildd gpg --allow-secret-key-import --import /vagrant/keys/${hostname}.sec
