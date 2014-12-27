@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # restrict ssh login
-cat << EOF > /etc/ssh/sshd_config
+cat << EOF >> /etc/ssh/sshd_config
 
 PermitRootLogin no
 PasswordAuthentication no
