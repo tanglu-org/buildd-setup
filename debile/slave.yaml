@@ -1,0 +1,24 @@
+---
+xmlrpc:
+    host: buildd.tanglu.org
+    port: 22017
+    keyfile: /srv/buildd/ELEMENT.key
+    certfile: /srv/buildd/ELEMENT.crt
+    ca_certs: /srv/buildd/tanglu-buildd.crt
+    gpg: GPGKEY_FINGERPRINT
+dput:
+    host: tanglu
+checks:
+    - lintian
+    - build
+arches:
+    - amd64
+    - i386
+suites:
+    - staging
+    - STABLE
+    - STABLE-updates
+components:
+    - main
+    - contrib
+    - non-free
