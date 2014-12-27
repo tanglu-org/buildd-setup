@@ -3,6 +3,7 @@
 set -x # Verbose
 
 apt-get update
+apt-get upgrade -y --force-yes
 apt-get install -y --force-yes --no-install-recommends \
     sudo devscripts dpkg-dev debootstrap git vim \
     schroot sbuild aptitude lintian dput-ng python-dput python-debian \
