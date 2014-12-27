@@ -65,6 +65,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Bootstrap the buildd
   config.vm.provision "shell", path: "bootstrap.sh"
 
+  # Finish the box setup
+  config.vm.provision "shell", path: "box-setup.sh"
+
   # Enable provisioning with CFEngine. CFEngine Community packages are
   # automatically installed. For example, configure the host as a
   # policy server and optionally a policy file to run:
