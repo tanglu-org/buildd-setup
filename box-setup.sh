@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x # Verbose
+
 # restrict ssh login
 cat << EOF >> /etc/ssh/sshd_config
 
