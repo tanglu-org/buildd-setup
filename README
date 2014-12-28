@@ -15,7 +15,7 @@ Back up the builder keys:
 /srv/buildd/<element>.crt
 /srv/buildd/<element>.pgp
 
-You will need to export the builder secret pgp key, for that log into the
+You will need to export the secret builder pgp key, for that log into the
 builder, then
 $ sudo -u buildd -i
 $ gpg --export-secret-key -a <element>@buildd.tanglu.org > /srv/buildd/<element>.sec
