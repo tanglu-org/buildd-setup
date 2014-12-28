@@ -17,7 +17,7 @@ export DEVEL=chromodoris
 
 mkdir -p /srv/buildd/chroots
 
-export MIRROR="http://archive.tanglu.org/tanglu"
+export MIRROR="http://192.168.1.6:3142/archive.tanglu.org/tanglu"
 
 for ARCH in i386 amd64; do
 
