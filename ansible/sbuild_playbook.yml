@@ -77,7 +77,7 @@
         - all_releases
         - architectures
 
-    - lineinfile: line=force-unsafe-io dest=/srv/buildd/chroots/${SUITE}-${ARCH}/etc/dpkg/dpkg.cfg.d/90sbuild create=yes
+    - lineinfile: line=force-unsafe-io dest=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/etc/dpkg/dpkg.cfg.d/90sbuild create=yes
       with_nested:
         - all_releases
         - architectures
