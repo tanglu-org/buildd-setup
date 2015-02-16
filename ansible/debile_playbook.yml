@@ -1,0 +1,45 @@
+---
+- hosts: tanglu-chroot-buildd
+  connection: chroot
+  vars:
+    stable: bartholomea
+    devel: chromodoris
+    releases:
+        - "{{ stable }}"
+        - "{{ devel }}"
+    all_releases:
+        - "{{ stable }}"
+        - "{{ devel }}"
+        - staging
+    mirror: "http://archive.tanglu.org/tanglu"
+    architectures:
+        - amd64
+        - i386
+  remote_user: root
+  sudo: yes
+  tasks:
+    - apt: update_cache=yes upgrade=dist
+    - apt: name=git
+    - apt: name=python-dput 
+    - apt: name=python-debian
+    - apt: name=python-requests
+    - apt: name=python-yaml
+    - apt: name=python-schroot
+    - apt: name=python-sqlalchemy
+    - apt: name=python-virtualenv
+    - apt: name=virtualenv
+    - apt: name=python-pip
+
+    - shell: git fetch && git reset --hard orgin/master
+      args:
+        chdir: /srv/buildd/
+        removes: /srv/buildd/debile-git
+
+    - shell: git clone git://gitorious.org/tanglu/debile.git debile-git
+      args:
+        chdir: /srv/buildd/
+        creates: /srv/buildd/debile-git
+
+    - file: src=/srv/buildd/debile-git/contrib/tanglu/tangl-buildd.crt path=/srv/buildd/tanglu-buildd.crt state=link owner=buildd group=buildd
+
+    - pip: requirements=/srv/buildd/debile-git/requirements-slave.txt virtualenv=/srv/buildd/debile-git/ENV
