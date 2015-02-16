@@ -32,7 +32,7 @@
 
     - shell: git fetch && git reset --hard orgin/master
       args:
-        chdir: /srv/buildd/
+        chdir: /srv/buildd/debile-git
         removes: /srv/buildd/debile-git
 
     - shell: git clone git://gitorious.org/tanglu/debile.git debile-git
