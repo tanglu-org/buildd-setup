@@ -49,8 +49,7 @@
         - releases
         - architectures
       args:
-        creates: /srv/buildd/.ansible-chroot-create
-    - file: path=/srv/buildd/.ansible-chroot-create state=touch
+        creates: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}.tar.gz
 
     - shell: cp -a /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }} /srv/buildd/chroots/staging-{{ item[1] }}
       with_nested:
