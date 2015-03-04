@@ -55,11 +55,10 @@
 
     - shell: cp -a /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }} /srv/buildd/chroots/staging-{{ item[1] }}
       with_nested:
-        - [ 'chromodoris' ]
+        - [ "{{ devel }}" ]
         - architectures
       args:
-        creates: /srv/buildd/.ansible-chroot-copy
-    - file: path=/srv/buildd/.ansible-chroot-copy state=touch
+        removes: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
 
     - file: path=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/dev/ptmx state=absent
       with_nested:
