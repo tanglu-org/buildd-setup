@@ -36,6 +36,8 @@
     - stat: path=/srv/buildd/.ansible-chroot-tar
       register: chroot_setup_done
 
+    - file: path=/srv/buildd/.ansible-chroot-tar state=touch
+
     - shell: >
         sbuild-createchroot --arch={{ item[1] }}
         --components="main,contrib,non-free"
@@ -94,20 +96,17 @@
         - releases
         - architectures
       args:
-        creates: /srv/buildd/.ansible-chroot-schroot-move
-    - file: path=/srv/buildd/.ansible-chroot-schroot-move state=touch
+        creates: /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }}
 
     - shell: cp /etc/schroot/chroot.d/{{ stable }}-{{ item }} /etc/schroot/chroot.d/{{ stable }}-updates-{{ item }}
       with_items: architectures
       args:
-        creates: /srv/buildd/.ansible-chroot-schroot-stable-copy
-    - file: path=/srv/buildd/.ansible-chroot-schroot-stable-copy state=touch
+        creates: /etc/schroot/chroot.d/{{ stable }}-updates-{{ item }}
 
     - shell: cp /etc/schroot/chroot.d/{{ devel }}-{{ item }} /etc/schroot/chroot.d/staging-{{ item }}
       with_items: architectures
       args:
-        creates: /srv/buildd/.ansible-chroot-schroot-devel-copy
-    - file: path=/srv/buildd/.ansible-chroot-schroot-devel-copy state=touch
+        creates: /etc/schroot/chroot.d/staging-{{ item }}
 
     - replace: dest=/etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }} regexp="{{ item[0] }}-{{ item[1] }}-sbuild" replace="{{ item[0] }}-{{ item[1] }}"
       with_nested:
@@ -125,8 +124,7 @@
         - all_releases
         - architectures
       args:
-        creates: /srv/buildd/.ansible-chroot-tar
-    - file: path=/srv/buildd/.ansible-chroot-tar state=touch
+        removes: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
 
     - shell: sbuild-update --update --upgrade --clean {{ item[0] }}-{{ item[1] }}
       with_nested:
