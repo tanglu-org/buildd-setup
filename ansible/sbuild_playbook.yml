@@ -129,3 +129,5 @@
       with_nested:
         - all_releases
         - architectures
+
+    - template: dest=/etc/sbuild/sbuild.conf src=sbuild/sbuild.conf
