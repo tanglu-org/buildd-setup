@@ -30,15 +30,18 @@
     - apt: name=virtualenv
     - apt: name=python-pip
 
+    - stat: path=/srv/buildd/debile-git
+      register: debile_git
+
     - shell: git fetch && git reset --hard orgin/master
       args:
         chdir: /srv/buildd/debile-git
-        removes: /srv/buildd/debile-git
+      when: debile_git.stat.exists == True
 
     - shell: git clone git://gitorious.org/tanglu/debile.git debile-git
       args:
         chdir: /srv/buildd/
-        creates: /srv/buildd/debile-git
+      when: debile_git.stat.exists == False
 
     - file: src=/srv/buildd/debile-git/contrib/tanglu/tangl-buildd.crt path=/srv/buildd/tanglu-buildd.crt state=link owner=buildd group=buildd
 
