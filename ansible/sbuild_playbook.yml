@@ -17,7 +17,6 @@
   sudo: yes
   tasks:
     - apt: update_cache=yes upgrade=dist
-    - apt: name=sudo 
     - apt: name=devscripts 
     - apt: name=dpkg-dev
     - apt: name=debootstrap
