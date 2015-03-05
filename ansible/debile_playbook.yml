@@ -1,6 +1,5 @@
 ---
-- hosts: tanglu-chroot-buildd
-  connection: chroot
+- hosts: all
   vars:
     stable: bartholomea
     devel: chromodoris
@@ -15,7 +14,7 @@
     architectures:
         - amd64
         - i386
-  remote_user: root
+  remote_user: vagrant
   sudo: yes
   tasks:
     - apt: update_cache=yes upgrade=dist
