@@ -9,6 +9,6 @@
     - apt: name=byobu state=latest
       register: byobu_update
 
-    - include: sbuild_playbook.yml
-    - include: debile_playbook.yml
-    - include: vagrant_playbook.yml
+- include: sbuild_playbook.yml
+- include: debile_playbook.yml
+- include: vagrant_playbook.yml
