@@ -33,7 +33,7 @@
     - stat: path=/srv/buildd/debile-git
       register: debile_git
 
-    - shell: git fetch && git reset --hard orgin/master
+    - shell: git fetch && git reset --hard origin/master
       args:
         chdir: /srv/buildd/debile-git
       when: debile_git.stat.exists == True
