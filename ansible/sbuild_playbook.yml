@@ -77,10 +77,11 @@
         - architectures
       when: chroot_setup_done.stat.exists == False
 
-    - lineinfile: line="{{ item[0] }} {{ mirror }} {{ stable }}-updates main contrib non-free" dest=/srv/buildd/chroots/{{ stable }}-{{ item[1] }}/etc/apt/sources.list
+    - lineinfile: line="{{ item[0] }} {{ mirror }} {{ item[2] }}-updates main contrib non-free" dest=/srv/buildd/chroots/{{ item[2] }}-{{ item[1] }}/etc/apt/sources.list
       with_nested:
         - [ 'deb', 'deb-src' ]
         - architectures
+        - releases
       when: chroot_setup_done.stat.exists == False
 
     - lineinfile: line="{{ item[0] }} {{ mirror }} staging main contrib non-free" dest=/srv/buildd/chroots/staging-{{ item[1] }}/etc/apt/sources.list
