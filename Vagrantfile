@@ -16,7 +16,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.guest = "debian"
 
   # set the hostname to the buildd name
-  config.vm.hostname = "<element>"
+  config.vm.hostname = "neon"
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
