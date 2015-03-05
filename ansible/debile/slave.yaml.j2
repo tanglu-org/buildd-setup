@@ -1,0 +1,33 @@
+---
+xmlrpc:
+    host: buildd.tanglu.org
+    port: 22017
+    keyfile: /srv/buildd/{{ item.host }}.key
+    certfile: /srv/buildd/{{ item.host }}.crt
+    ca_certs: /srv/buildd/tanglu-buildd.crt
+
+gpg: {{ item.gpg_fingerprint }}
+
+dput:
+    host: tanglu
+
+checks:
+    - lintian
+    - build
+
+arches:
+{% for arch in item.architectures %}
+    - {{ arch }}
+{% endfor %}
+
+suites:
+{% for suite in item.releases %}
+    - {{ suite }}
+    - {{ suite }}-updates
+{% endfor %}
+    - staging
+
+components:
+    - main
+    - contrib
+    - non-free

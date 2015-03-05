@@ -50,3 +50,16 @@
     - shell: . /srv/buildd/debile-git/ENV/bin/activate && make clean && make develop
       args:
         chdir: /srv/buildd/debile-git
+
+    - shell: hostname
+      register: hostname
+
+    - name: get the builder PGP fingerprint
+      shell: sudo -u buildd gpg --fingerprint {{ hostname }}@buildd.tanglu.org | grep fingerprint | cut -f 2 -d = | sed 's/\s*//g'
+      register: gpg_fingerprint
+
+    - file: state=directory path=/etc/debile/
+
+    - template: dest=/etc/debile/slave.yaml src=debile/slave.yaml.j2
+      with_items:
+        - { architectures: "{{ architectures }}", releases: "{{ releases }}", host: "{{ hostname }}", gpg_fingerprint: "{{ gpg_fingerprint }}" }
