@@ -119,6 +119,10 @@
     - replace: dest=/etc/schroot/chroot.d/staging-{{ item }} regexp="{{ devel }}" replace="staging"
       with_items: architectures
 
+    # workaround for https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=769289
+    - lineinfile: dest=/etc/schroot/chroot.d/staging-{{ item }} line="profile=sbuild"
+      with_items: architectures
+
     - shell: tar caf /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}.tar.gz -C /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }} . && rm -r /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
       with_nested:
         - all_releases
