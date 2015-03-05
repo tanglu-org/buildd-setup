@@ -134,5 +134,5 @@
 
     - template: dest=/etc/sbuild/sbuild.conf src=sbuild/sbuild.conf
 
-    - file: state=directory path=/srv/buildd/.gnupg/
+    - file: state=directory path=/srv/buildd/.gnupg/ group=buildd owner=buildd
     - shell: haveged & sudo -u buildd sbuild-update --keygen
