@@ -67,7 +67,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.provision "ansible" do |ansible|
        ansible.playbook = "ansible/playbook.yml"
        ansible.verbose = 'v'
-       ansible.raw_arguments = ['-u vagrant']
   end
 
   # Finish the box setup
