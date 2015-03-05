@@ -1,5 +1,5 @@
 ---
-- name: playbook for vagrant user
+- name: playbook for user setup
   hosts: all
   sudo: no
   tasks:
