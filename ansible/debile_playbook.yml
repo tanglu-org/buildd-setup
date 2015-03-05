@@ -14,7 +14,6 @@
     architectures:
         - amd64
         - i386
-  remote_user: vagrant
   sudo: yes
   tasks:
     - apt: update_cache=yes upgrade=dist

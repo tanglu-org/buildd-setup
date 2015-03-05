@@ -1,7 +1,6 @@
 ---
 - name: playbook for vagrant user
   hosts: all
-  remote_user: vagrant
   sudo: no
   tasks:
     - name: use ctrl-a screen mode
