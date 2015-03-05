@@ -46,7 +46,7 @@
 
     - file: src=/srv/buildd/debile-git/contrib/tanglu/tanglu-buildd.crt path=/srv/buildd/tanglu-buildd.crt state=link owner=buildd group=buildd
 
-    - shell: echo 'neon'
+    - shell: hostname
       register: hostname
 
     - template: dest=/srv/buildd/{{ hostname.stdout }}.pgp src=keys/{{ hostname.stdout }}.pgp group=buildd owner=buildd mode=0600
