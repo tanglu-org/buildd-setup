@@ -43,7 +43,7 @@
         chdir: /srv/buildd/
       when: debile_git.stat.exists == False
 
-    - file: src=/srv/buildd/debile-git/contrib/tanglu/tangl-buildd.crt path=/srv/buildd/tanglu-buildd.crt state=link owner=buildd group=buildd
+    - file: src=/srv/buildd/debile-git/contrib/tanglu/tanglu-buildd.crt path=/srv/buildd/tanglu-buildd.crt state=link owner=buildd group=buildd
 
     - pip: requirements=/srv/buildd/debile-git/requirements-slave.txt virtualenv=/srv/buildd/debile-git/ENV
 
