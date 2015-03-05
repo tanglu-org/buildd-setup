@@ -87,5 +87,3 @@
     - template: dest=/etc/dput.d/metas/tanglu.json src=dput/tanglu_meta.json
 
     - template: dest=/etc/dput.d/profiles/tanglu.json src=dput/tanglu_profile.json
-
-    - service: enabled=yes name=debile-slave state=restarted
