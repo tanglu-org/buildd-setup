@@ -63,7 +63,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # information on available options.
 
   # Bootstrap the buildd
-  config.vm.provision "shell", path: "bootstrap.sh"
+  config.vm.provision "ansible" do |ansible|
+       ansible.playbook = "ansible/playbook.yml"
+       ansible.verbose = 'v'
+  end
 
   # Finish the box setup
   config.vm.provision "shell", path: "box-setup.sh"

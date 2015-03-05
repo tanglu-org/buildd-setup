@@ -1,0 +1,15 @@
+---
+- name: playbook for system setup
+  hosts: all
+  sudo: yes
+  tasks:
+    - apt: update_cache=yes upgrade=dist
+
+    - apt: name=byobu state=latest
+      register: byobu_update
+
+    - apt: name=vim
+
+- include: sbuild_playbook.yml
+- include: debile_playbook.yml
+- include: user_playbook.yml

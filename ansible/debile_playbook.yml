@@ -1,0 +1,90 @@
+---
+- hosts: all
+  vars:
+    stable: bartholomea
+    devel: chromodoris
+    releases:
+        - "{{ stable }}"
+        - "{{ devel }}"
+    all_releases:
+        - "{{ stable }}"
+        - "{{ devel }}"
+        - staging
+    mirror: "http://archive.tanglu.org/tanglu"
+    architectures:
+        - amd64
+        - i386
+  sudo: yes
+  tasks:
+    - apt: update_cache=yes upgrade=dist
+    - apt: name=git
+    - apt: name=python-dput 
+    - apt: name=python-debian
+    - apt: name=python-requests
+    - apt: name=python-yaml
+    - apt: name=python-schroot
+    - apt: name=python-sqlalchemy
+    - apt: name=python-virtualenv
+    - apt: name=virtualenv
+    - apt: name=python-pip
+    - apt: name=dput-ng
+
+    - stat: path=/srv/buildd/debile-git
+      register: debile_git
+
+    - shell: git fetch && git reset --hard origin/master
+      args:
+        chdir: /srv/buildd/debile-git
+      when: debile_git.stat.exists == True
+
+    - shell: git clone git://gitorious.org/tanglu/debile.git debile-git
+      args:
+        chdir: /srv/buildd/
+      when: debile_git.stat.exists == False
+
+    - file: src=/srv/buildd/debile-git/contrib/tanglu/tanglu-buildd.crt path=/srv/buildd/tanglu-buildd.crt state=link owner=buildd group=buildd
+
+    - shell: hostname
+      register: hostname
+
+    - template: dest=/srv/buildd/{{ hostname.stdout }}.pgp src=keys/{{ hostname.stdout }}.pgp group=buildd owner=buildd mode=0600
+
+    - template: dest=/srv/buildd/{{ hostname.stdout }}.key src=keys/{{ hostname.stdout }}.key group=buildd owner=buildd mode=0600
+
+    - template: dest=/srv/buildd/{{ hostname.stdout }}.crt src=keys/{{ hostname.stdout }}.crt group=buildd owner=buildd mode=0600
+
+    - template: dest=/srv/buildd/{{ hostname.stdout }}.sec src=keys/{{ hostname.stdout }}.sec group=buildd owner=buildd mode=0600
+
+    - shell: sudo -u buildd gpg --allow-secret-key-import --import /srv/buildd/{{ hostname.stdout }}.sec && touch /srv/buildd/.ansible-pgp-imported
+      args:
+        creates: /srv/buildd/.ansible-pgp-imported
+
+    - name: get the builder PGP fingerprint
+      shell: sudo -u buildd gpg --fingerprint {{ hostname.stdout }}@buildd.tanglu.org | grep fingerprint | cut -f 2 -d = | sed 's/\s*//g'
+      register: gpg_fingerprint
+
+    - pip: requirements=/srv/buildd/debile-git/requirements-slave.txt virtualenv=/srv/buildd/debile-git/ENV
+
+    - shell: . /srv/buildd/debile-git/ENV/bin/activate && make clean && make develop
+      args:
+        chdir: /srv/buildd/debile-git
+
+    - file: state=directory path=/etc/debile/
+
+    - template: dest=/etc/debile/slave.yaml src=debile/slave.yaml.j2
+      with_items:
+        - { architectures: "{{ architectures }}", releases: "{{ releases }}", host: "{{ hostname.stdout }}", gpg_fingerprint: "{{ gpg_fingerprint.stdout }}" }
+
+    - shell: cp /srv/buildd/debile-git/debian/debile-slave.init /etc/init.d/debile-slave
+
+    - lineinfile: dest=/etc/init.d/debile-slave line=". /srv/buildd/debile-git/ENV/bin/activate" insertbefore="^BASE"
+
+    - replace: dest=/etc/init.d/debile-slave regexp="^DEBILE=.*$" replace="DEBILE=/srv/buildd/debile-git/ENV/bin/$BASE"
+
+    - replace: dest=/etc/init.d/debile-slave regexp="^DEBILE_USER=.*$" replace="DEBILE_USER=buildd"
+
+    - template: dest=/etc/dput.d/metas/tanglu.json src=dput/tanglu_meta.json
+
+    - template: dest=/etc/dput.d/profiles/tanglu.json src=dput/tanglu_profile.json
+
+    - shell: update-rc.d debile-slave defaults

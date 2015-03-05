@@ -1,0 +1,11 @@
+---
+- name: playbook for user setup
+  hosts: all
+  sudo: no
+  tasks:
+    - name: use ctrl-a screen mode
+      command: byobu-ctrl-a screen
+    - name: enable byobu on login
+      command: byobu-launcher-install
+    - name: enable byobu prompt
+      command: byobu-enable-prompt

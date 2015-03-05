@@ -1,0 +1,140 @@
+---
+- hosts: all
+  vars:
+    stable: bartholomea
+    devel: chromodoris
+    releases:
+        - "{{ stable }}"
+        - "{{ devel }}"
+    all_releases:
+        - "{{ stable }}"
+        - "{{ devel }}"
+        - staging
+    mirror: "http://archive.tanglu.org/tanglu"
+    architectures:
+        - amd64
+        - i386
+  sudo: yes
+  tasks:
+    - apt: update_cache=yes upgrade=dist
+    - apt: name=devscripts 
+    - apt: name=dpkg-dev
+    - apt: name=debootstrap
+    - apt: name=schroot 
+    - apt: name=sbuild 
+    - apt: name=aptitude 
+    - apt: name=lintian 
+    - apt: name=haveged
+
+    - user: name=buildd createhome=yes groups=sbuild home=/srv/buildd shell=/bin/bash system=yes
+    - file: state=directory path=/srv/buildd/chroots
+
+    - stat: path=/srv/buildd/.ansible-chroot-tar
+      register: chroot_setup_done
+
+    - file: path=/srv/buildd/.ansible-chroot-tar state=touch
+
+    - shell: >
+        sbuild-createchroot --arch={{ item[1] }}
+        --components="main,contrib,non-free"
+        --include=aptitude
+        --keep-sbuild-chroot-dir
+        --make-sbuild-tarball=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}.tar.gz
+        {{ item[0] }}
+        /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
+        {{ mirror }}
+      with_nested: 
+        - releases
+        - architectures
+      args:
+        creates: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}.tar.gz
+
+    - shell: cp -a /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }} /srv/buildd/chroots/staging-{{ item[1] }}
+      with_nested:
+        - [ "{{ devel }}" ]
+        - architectures
+      args:
+        removes: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
+
+    - file: path=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/dev/ptmx state=absent
+      with_nested:
+        - all_releases
+        - architectures
+      when: chroot_setup_done.stat.exists == False
+
+    - file: src=pts/ptmx path=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/dev/ptmx state=link force=yes
+      with_nested:
+        - all_releases
+        - architectures
+      when: chroot_setup_done.stat.exists == False
+
+    - lineinfile: line=force-unsafe-io dest=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/etc/dpkg/dpkg.cfg.d/90sbuild create=yes
+      with_nested:
+        - all_releases
+        - architectures
+      when: chroot_setup_done.stat.exists == False
+
+    - lineinfile: line="{{ item[0] }} {{ mirror }} {{ item[2] }}-updates main contrib non-free" dest=/srv/buildd/chroots/{{ item[2] }}-{{ item[1] }}/etc/apt/sources.list
+      with_nested:
+        - [ 'deb', 'deb-src' ]
+        - architectures
+        - releases
+      when: chroot_setup_done.stat.exists == False
+
+    - lineinfile: line="{{ item[0] }} {{ mirror }} staging main contrib non-free" dest=/srv/buildd/chroots/staging-{{ item[1] }}/etc/apt/sources.list
+      with_nested:
+        - [ 'deb', 'deb-src' ]
+        - architectures
+      when: chroot_setup_done.stat.exists == False
+
+    - shell: mv /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }}-sbuild-* /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }}
+      with_nested: 
+        - releases
+        - architectures
+      args:
+        creates: /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }}
+
+    - shell: cp /etc/schroot/chroot.d/{{ stable }}-{{ item }} /etc/schroot/chroot.d/{{ stable }}-updates-{{ item }}
+      with_items: architectures
+      args:
+        creates: /etc/schroot/chroot.d/{{ stable }}-updates-{{ item }}
+
+    - shell: cp /etc/schroot/chroot.d/{{ devel }}-{{ item }} /etc/schroot/chroot.d/staging-{{ item }}
+      with_items: architectures
+      args:
+        creates: /etc/schroot/chroot.d/staging-{{ item }}
+
+    - replace: dest=/etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }} regexp="{{ item[0] }}-{{ item[1] }}-sbuild" replace="{{ item[0] }}-{{ item[1] }}"
+      with_nested:
+        - releases
+        - architectures
+
+    - replace: dest=/etc/schroot/chroot.d/{{ stable }}-updates-{{ item }} regexp="{{ stable }}-{{ item }}-sbuild" replace="{{ stable }}-updates-{{ item }}"
+      with_items: architectures
+
+    - replace: dest=/etc/schroot/chroot.d/staging-{{ item }} regexp="{{ devel }}-{{ item }}-sbuild" replace="staging-{{ item }}"
+      with_items: architectures
+
+    - replace: dest=/etc/schroot/chroot.d/staging-{{ item }} regexp="{{ devel }}" replace="staging"
+      with_items: architectures
+
+    # workaround for https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=769289
+    - lineinfile: dest=/etc/schroot/chroot.d/staging-{{ item }} line="profile=sbuild"
+      with_items: architectures
+
+    - shell: tar caf /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}.tar.gz -C /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }} . && rm -r /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
+      with_nested:
+        - all_releases
+        - architectures
+      args:
+        removes: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
+
+    - shell: sbuild-update --update --upgrade --clean {{ item[0] }}-{{ item[1] }}
+      with_nested:
+        - all_releases
+        - architectures
+
+    - template: dest=/etc/sbuild/sbuild.conf src=sbuild/sbuild.conf
+
+    - file: state=directory path=/srv/buildd/.gnupg/ group=buildd owner=buildd
+    - shell: haveged & sudo -u buildd sbuild-update --keygen
