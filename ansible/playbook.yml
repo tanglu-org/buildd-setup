@@ -8,6 +8,8 @@
     - apt: name=byobu state=latest
       register: byobu_update
 
+    - apt: name=vim
+
 - include: sbuild_playbook.yml
 - include: debile_playbook.yml
-- include: vagrant_playbook.yml
+- include: user_playbook.yml

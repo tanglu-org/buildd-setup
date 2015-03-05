@@ -21,7 +21,6 @@
     - apt: name=devscripts 
     - apt: name=dpkg-dev
     - apt: name=debootstrap
-    - apt: name=vim
     - apt: name=schroot 
     - apt: name=sbuild 
     - apt: name=aptitude 
