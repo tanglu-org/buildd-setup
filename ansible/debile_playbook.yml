@@ -47,6 +47,6 @@
 
     - pip: requirements=/srv/buildd/debile-git/requirements-slave.txt virtualenv=/srv/buildd/debile-git/ENV
 
-    - shell: source /srv/buildd/debile-git/ENV/bin/activate && make develop
+    - shell: . /srv/buildd/debile-git/ENV/bin/activate && make clean && make develop
       args:
         chdir: /srv/buildd/debile-git
