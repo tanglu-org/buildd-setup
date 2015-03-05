@@ -46,3 +46,7 @@
     - file: src=/srv/buildd/debile-git/contrib/tanglu/tangl-buildd.crt path=/srv/buildd/tanglu-buildd.crt state=link owner=buildd group=buildd
 
     - pip: requirements=/srv/buildd/debile-git/requirements-slave.txt virtualenv=/srv/buildd/debile-git/ENV
+
+    - shell: source /srv/buildd/debile-git/ENV/bin/activate && make develop
+      args:
+        chdir: /srv/buildd/debile-git
