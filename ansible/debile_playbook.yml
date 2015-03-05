@@ -75,3 +75,17 @@
     - template: dest=/etc/debile/slave.yaml src=debile/slave.yaml.j2
       with_items:
         - { architectures: "{{ architectures }}", releases: "{{ releases }}", host: "{{ hostname.stdout }}", gpg_fingerprint: "{{ gpg_fingerprint.stdout }}" }
+
+    - shell: cp /srv/buildd/debile-git/debian/debile-slave.init /etc/init.d/debile-slave
+
+    - lineinfile: dest=/etc/init.d/debile-slave line=". /srv/buildd/debile-git/ENV/bin/activate" insertbefore="^BASE"
+
+    - replace: dest=/etc/init.d/debile-slave regexp="^DEBILE=.*$" replace="DEBILE=/srv/buildd/debile-git/ENV/bin/$BASE"
+
+    - replace: dest=/etc/init.d/debile-slave regexp="^DEBILE_USER=.*$" replace="DEBILE_USER=buildd"
+
+    - template: dest=/etc/dput.d/metas/tanglu.json src=dput/tanglu_meta.json
+
+    - template: dest=/etc/dput.d/profiles/tanglu.json src=dput/tanglu_profile.json
+
+    - service: enabled=yes name=debile-slave state=restarted
