@@ -1,7 +1,6 @@
 ---
 - name: playbook for system setup
   hosts: all
-  remote_user: vagrant
   sudo: yes
   tasks:
     - apt: update_cache=yes upgrade=dist
