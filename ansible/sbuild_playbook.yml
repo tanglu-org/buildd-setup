@@ -30,11 +30,6 @@
     - user: name=buildd createhome=yes groups=sbuild home=/srv/buildd shell=/bin/bash system=yes
     - file: state=directory path=/srv/buildd/chroots
 
-    - stat: path=/srv/buildd/.ansible-chroot-tar
-      register: chroot_setup_done
-
-    - file: path=/srv/buildd/.ansible-chroot-tar state=touch
-
     - shell: >
         sbuild-createchroot --arch={{ item[1] }}
         --components="main,contrib,non-free"
@@ -57,36 +52,28 @@
       args:
         removes: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
 
-    - file: path=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/dev/ptmx state=absent
-      with_nested:
-        - all_releases
-        - architectures
-      when: chroot_setup_done.stat.exists == False
+    - shell: find /srv/buildd/chroots/* -maxdepth 0 -type d
+      register: sbuild_chroots
 
-    - file: src=pts/ptmx path=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/dev/ptmx state=link force=yes
-      with_nested:
-        - all_releases
-        - architectures
-      when: chroot_setup_done.stat.exists == False
+    - file: path={{ item }}/dev/ptmx state=absent
+      with_items: sbuild_chroots.stdout_lines
 
-    - lineinfile: line=force-unsafe-io dest=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/etc/dpkg/dpkg.cfg.d/90sbuild create=yes
-      with_nested:
-        - all_releases
-        - architectures
-      when: chroot_setup_done.stat.exists == False
+    - file: src=pts/ptmx path={{ item }}/dev/ptmx state=link force=yes
+      with_items: sbuild_chroots.stdout_lines
 
-    - lineinfile: line="{{ item[0] }} {{ mirror }} {{ item[2] }}-updates main contrib non-free" dest=/srv/buildd/chroots/{{ item[2] }}-{{ item[1] }}/etc/apt/sources.list
+    - lineinfile: line=force-unsafe-io dest={{ item }}/etc/dpkg/dpkg.cfg.d/90sbuild create=yes
+      with_items: sbuild_chroots.stdout_lines
+
+    - shell: if [ -d /srv/buildd/chroots/{{ item[2] }}-{{ item[1] }} ]; then echo "{{ item[0] }} {{ mirror }} {{ item[2] }}-updates main contrib non-free" >> /srv/buildd/chroots/{{ item[2] }}-{{ item[1] }}/etc/apt/sources.list; fi
       with_nested:
         - [ 'deb', 'deb-src' ]
         - architectures
         - releases
-      when: chroot_setup_done.stat.exists == False
 
-    - lineinfile: line="{{ item[0] }} {{ mirror }} staging main contrib non-free" dest=/srv/buildd/chroots/staging-{{ item[1] }}/etc/apt/sources.list
+    - shell: if [ -d /srv/buildd/chroots/staging-{{ item[1] }} ]; then echo "{{ item[0] }} {{ mirror }} staging main contrib non-free" >> /srv/buildd/chroots/staging-{{ item[1] }}/etc/apt/sources.list; fi
       with_nested:
         - [ 'deb', 'deb-src' ]
         - architectures
-      when: chroot_setup_done.stat.exists == False
 
     - shell: mv /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }}-sbuild-* /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }}
       with_nested: 
