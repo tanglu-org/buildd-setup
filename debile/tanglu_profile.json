@@ -1,7 +1,0 @@
-{
-    "fqdn": "ftp-master.tanglu.org",
-    "incoming": "~/incoming/",
-    "login": "anonymous",
-    "meta": "tanglu",
-    "method": "ftp"
-}
