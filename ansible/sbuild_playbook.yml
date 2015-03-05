@@ -111,6 +111,9 @@
         - releases
         - architectures
 
+    - replace: dest=/etc/schroot/chroot.d/staging-{{ item }} regexp="{{ devel }}" replace="staging"
+      with_items: architectures
+
     - replace: dest=/etc/schroot/chroot.d/{{ stable }}-updates-{{ item }} regexp="{{ stable }}-{{ item }}-sbuild" replace="{{ stable }}-updates-{{ item }}"
       with_items: architectures
 
@@ -131,4 +134,5 @@
 
     - template: dest=/etc/sbuild/sbuild.conf src=sbuild/sbuild.conf
 
+    - file: state=directory path=/srv/buildd/.gnupg/
     - shell: haveged & sudo -u buildd sbuild-update --keygen
