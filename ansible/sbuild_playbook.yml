@@ -131,3 +131,5 @@
         - architectures
 
     - template: dest=/etc/sbuild/sbuild.conf src=sbuild/sbuild.conf
+
+    - shell: sudo -u buildd sbuild-update --keygen
