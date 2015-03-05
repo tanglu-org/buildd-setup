@@ -2,3 +2,29 @@
 
 To use this you will need to add a tanglu box first, e.g.:
 http://yofel.net/tanglu/vagrant/tanglu-2.0-amd64.box
+
+== Set up a new builder ==
+TODO
+
+== Migrate an existing builder / Prepare a builder for re-provisioning ==
+
+Back up any settings that are not covered by the vagrant provisioning
+
+Back up the builder keys:
+/srv/buildd/<element>.key
+/srv/buildd/<element>.crt
+/srv/buildd/<element>.pgp
+
+You will need to export the secret builder pgp key, for that log into the
+builder, then
+$ sudo -u buildd -i
+$ gpg --export-secret-key -a <element>@buildd.tanglu.org > /srv/buildd/<element>.sec
+then backup /srv/buildd/<element>.sec
+
+You will need the sbuild keys:
+/var/lib/sbuild/apt-keys/sbuild-key.pub
+/var/lib/sbuild/apt-keys/sbuild-key.sec
+
+In the folder that contains the Vagrantfile, make a 'keys' folder and put
+all keys in there. The provisioning will import the keys into the buildd
+from there

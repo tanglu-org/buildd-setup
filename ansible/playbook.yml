@@ -1,0 +1,14 @@
+---
+- name: playbook for system setup
+  hosts: all
+  remote_user: vagrant
+  sudo: yes
+  tasks:
+    - apt: update_cache=yes upgrade=dist
+
+    - apt: name=byobu state=latest
+      register: byobu_update
+
+    - include: sbuild_playbook.yml
+    - include: debile_playbook.yml
+    - include: vagrant_playbook.yml

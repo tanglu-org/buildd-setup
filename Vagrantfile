@@ -15,7 +15,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # override the guest os autodetect
   config.vm.guest = "debian"
 
-  config.vm.hostname = "neon"
+  # set the hostname to the buildd name
+  config.vm.hostname = "<element>"
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
@@ -34,7 +35,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Create a public network, which generally matched to bridged network.
   # Bridged networks make the machine appear as another physical device on
   # your network.
-  config.vm.network "public_network", ip: "192.168.1.13"
+  # config.vm.network "public_network", ip: "192.168.1.13"
 
   # If true, then any SSH connections made will enable agent forwarding.
   # Default value: false
@@ -63,7 +64,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # information on available options.
 
   # Bootstrap the buildd
-  config.vm.provision "shell", path: "bootstrap.sh"
+  config.vm.provision "ansible" do |ansible|
+       ansible.playbook = "ansible/playbook.yml"
+       ansible.verbose = 'v'
+  end
 
   # Finish the box setup
   config.vm.provision "shell", path: "box-setup.sh"
