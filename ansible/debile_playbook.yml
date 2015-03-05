@@ -29,6 +29,7 @@
     - apt: name=python-virtualenv
     - apt: name=virtualenv
     - apt: name=python-pip
+    - apt: name=dput-ng
 
     - stat: path=/srv/buildd/debile-git
       register: debile_git

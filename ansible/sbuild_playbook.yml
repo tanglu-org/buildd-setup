@@ -28,7 +28,6 @@
     - apt: name=sbuild 
     - apt: name=aptitude 
     - apt: name=lintian 
-    - apt: name=dput-ng 
 
     - user: name=buildd createhome=yes groups=sbuild home=/srv/buildd shell=/bin/bash system=yes
     - file: state=directory path=/srv/buildd/chroots
