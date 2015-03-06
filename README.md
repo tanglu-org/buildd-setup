@@ -1,14 +1,14 @@
-#### Tanglu Buildd Provisioning
+# Tanglu Buildd Provisioning
 
-### Set up a new builder
+## Set up a new builder
 
-## Set up a system to host the builder
+### Set up a system to host the builder
 Install a buildd host using one of our supported releases:
    * Tanglu Bartholomea (2.0)
    * Tanglu Chromodoris
    * Debian Jessie
 
-## Generate the Builder Keys
+### Generate the Builder Keys
 Note1: The rng-tools and urandom may help if you don't have enough entropy
        (use with care and inform yourself about what these tools do before using them!).
 Note2: During provisioning ansible will install haveged in the builders to
@@ -45,11 +45,11 @@ Create a debile xmlrpc ssl key and cert:
 Now put all the generated keys in ansible/keys/ where the provisioning
 will pick them up
 
-## Provision a builder
+### Provision a builder
 
 For an intro into ansible, visit http://www.ansible.com/how-ansible-works
 
-# Quick Intro
+#### Quick Intro
 
 To use ansible for provisioning, the builder needs to have a ssh accessible
 user with sudo permissions.
@@ -72,7 +72,7 @@ Once ansible finishes the builder should be restarted so systemd can properly
 start the debile-slave service. After this the builder should be ready and ask
 the master for new jobs.
 
-### Migrate an existing builder
+## Migrate an existing builder
 
 Back up any settings that are not covered by the ansible provisioning
 
@@ -94,7 +94,7 @@ then backup `/srv/buildd/<element>.sec`
 Put all keys in ansible/keys/
 The provisioning will import the keys into the buildd from there
 
-### Vagrant
+## Vagrant
 
 For testing/development purposes you can set up a Virtualbox VM using vagrant
 
