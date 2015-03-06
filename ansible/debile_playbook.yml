@@ -63,7 +63,7 @@
       shell: sudo -u buildd gpg --fingerprint {{ hostname.stdout }}@buildd.tanglu.org | grep fingerprint | cut -f 2 -d = | sed 's/\s*//g'
       register: gpg_fingerprint
 
-    - pip: requirements=/srv/buildd/debile-git/requirements-slave.txt virtualenv=/srv/buildd/debile-git/ENV
+    - pip: requirements=/srv/buildd/debile-git/requirements-slave.txt virtualenv=/srv/buildd/debile-git/ENV virtualenv_site_packages=yes
 
     - shell: . /srv/buildd/debile-git/ENV/bin/activate && make clean && make develop
       args:
