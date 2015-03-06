@@ -37,7 +37,7 @@
         chdir: /srv/buildd/debile-git
       when: debile_git.stat.exists == True
 
-    - shell: git clone git://gitorious.org/tanglu/debile.git debile-git
+    - shell: git clone https://gitorious.org/tanglu/debile.git debile-git
       args:
         chdir: /srv/buildd/
       when: debile_git.stat.exists == False
