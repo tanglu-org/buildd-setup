@@ -9,12 +9,12 @@ Install a buildd host using one of our supported releases:
    * Debian Jessie
 
 ### Generate the Builder Keys
-Note1: The rng-tools and urandom may help if you don't have enough entropy
-       (use with care and inform yourself about what these tools do before using them!).
-Note2: During provisioning ansible will install haveged in the builders to
-       help with automated key generation that's needed for sbuild internals.
-       You might not want to generate the Builder PGP and SSL keys on a
-       provisioned builder.
+- Note1: The rng-tools and urandom may help if you don't have enough entropy
+         (use with care and inform yourself about what these tools do before using them!).
+- Note2: During provisioning ansible will install haveged in the builders to
+         help with automated key generation that's needed for sbuild internals.
+         You might not want to generate the Builder PGP and SSL keys on a
+         provisioned builder.
 
 Run
  ```
