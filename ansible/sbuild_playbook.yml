@@ -121,7 +121,13 @@
         - all_releases
         - architectures
 
-    - template: dest=/etc/sbuild/sbuild.conf src=sbuild/sbuild.conf
+    - name: Get the available CPU count
+      shell: nproc
+      register: ncores
+
+    - template: dest=/etc/sbuild/sbuild.conf src=sbuild/sbuild.conf.j2
+      with_items:
+        - { ncores: "{{ ncores.stdout }}" }
 
     - file: state=directory path=/srv/buildd/.gnupg/ group=buildd owner=buildd
     - shell: haveged & sudo -u buildd sbuild-update --keygen
