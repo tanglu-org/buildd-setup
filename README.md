@@ -8,6 +8,8 @@ Install a buildd host using one of our supported releases:
    * Tanglu Chromodoris
    * Debian Jessie
 
+For more information see README.host.md
+
 ### Generate the Builder Keys
 - Note1: The rng-tools and urandom may help if you don't have enough entropy
          (use with care and inform yourself about what these tools do before using them!).
