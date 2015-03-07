@@ -16,7 +16,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.guest = "debian"
 
   # set the hostname to the buildd name
-  config.vm.hostname = "<element>"
+  config.vm.hostname = "tanglu-test-buildd"
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
@@ -56,8 +56,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   #   vb.gui = true
   #
     # Use VBoxManage to customize the VM. For example to change memory:
-    vb.customize ["modifyvm", :id, "--memory", "2560"]
-    vb.customize ["modifyvm", :id, "--cpus", "4"]
+    vb.customize ["modifyvm", :id, "--memory", "1024"]
+    vb.customize ["modifyvm", :id, "--cpus", "1"]
   end
   #
   # View the documentation for the provider you're using for more
@@ -66,7 +66,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Bootstrap the buildd
   config.vm.provision "ansible" do |ansible|
        ansible.playbook = "ansible/playbook.yml"
-       ansible.verbose = 'v'
+       ansible.verbose = 'vvv'
   end
 
   # Finish the box setup
