@@ -87,4 +87,10 @@
 
     - template: dest=/etc/dput.d/profiles/tanglu.json src=dput/tanglu_profile.json
 
+    - stat: path=/etc/rc2.d/S01debile-slave
+      register: debile_service_enabled
+
+    - service: name=debile-slave state=restarted
+      when: debile_service_enabled.stat.exists == True
+
     - shell: update-rc.d debile-slave defaults
