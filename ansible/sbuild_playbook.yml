@@ -25,6 +25,7 @@
     - apt: name=aptitude 
     - apt: name=lintian 
     - apt: name=haveged
+    - apt: name=coreutils
 
     - user: name=buildd createhome=yes groups=sbuild home=/srv/buildd shell=/bin/bash system=yes
     - file: state=directory path=/srv/buildd/chroots
