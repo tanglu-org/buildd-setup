@@ -55,12 +55,12 @@
 
     - template: dest=/srv/buildd/{{ hostname.stdout }}.sec src=keys/{{ hostname.stdout }}.sec group=buildd owner=buildd mode=0600
 
-    - shell: sudo -u buildd gpg --allow-secret-key-import --import /srv/buildd/{{ hostname.stdout }}.sec && touch /srv/buildd/.ansible-pgp-imported
+    - shell: sudo -H -u buildd gpg --allow-secret-key-import --import /srv/buildd/{{ hostname.stdout }}.sec && touch /srv/buildd/.ansible-pgp-imported
       args:
         creates: /srv/buildd/.ansible-pgp-imported
 
     - name: get the builder PGP fingerprint
-      shell: sudo -u buildd gpg --fingerprint {{ hostname.stdout }}@buildd.tanglu.org | grep fingerprint | cut -f 2 -d = | sed 's/\s*//g'
+      shell: sudo -H -u buildd gpg --fingerprint {{ hostname.stdout }}@buildd.tanglu.org | grep fingerprint | cut -f 2 -d = | sed 's/\s*//g'
       register: gpg_fingerprint
 
     - pip: requirements=/srv/buildd/debile-git/requirements-slave.txt virtualenv=/srv/buildd/debile-git/ENV virtualenv_site_packages=yes

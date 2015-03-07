@@ -131,4 +131,4 @@
         - { ncores: "{{ ncores.stdout }}" }
 
     - file: state=directory path=/srv/buildd/.gnupg/ group=buildd owner=buildd
-    - shell: haveged & sudo -u buildd sbuild-update --keygen
+    - shell: haveged & sudo -H -u buildd sbuild-update --keygen
