@@ -1,15 +1,14 @@
 ---
 - hosts: all
   vars:
-    stable: bartholomea
     devel: chromodoris
     releases:
         - aequorea
-        - "{{ stable }}"
+        - bartholomea
         - "{{ devel }}"
     all_releases:
         - aequorea
-        - "{{ stable }}"
+        - bartholomea
         - "{{ devel }}"
         - staging
     mirror: "http://archive.tanglu.org/tanglu"
