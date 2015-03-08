@@ -22,7 +22,6 @@ arches:
 
 suites:
 {% for suite in item.releases %}
-    - {{ suite }}
     - {{ suite }}-updates
 {% endfor %}
     - staging
