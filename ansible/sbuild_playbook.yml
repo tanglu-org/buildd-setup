@@ -74,29 +74,17 @@
         - [ 'deb', 'deb-src' ]
         - architectures
 
-    - shell: mv /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }}-sbuild-* /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }}
-      with_nested:
-        - releases
-        - architectures
-      args:
-        creates: /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }}
-
-    - shell: cp /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }} /etc/schroot/chroot.d/{{ item[0] }}-updates-{{ item[1] }}
+    - shell: mv /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }}-sbuild-* /etc/schroot/chroot.d/{{ item[0] }}-updates-{{ item[1] }}
       with_nested:
         - releases
         - architectures
       args:
         creates: /etc/schroot/chroot.d/{{ item[0] }}-updates-{{ item[1] }}
 
-    - shell: cp /etc/schroot/chroot.d/{{ devel }}-{{ item }} /etc/schroot/chroot.d/staging-{{ item }}
+    - shell: cp /etc/schroot/chroot.d/{{ devel }}-updates-{{ item }} /etc/schroot/chroot.d/staging-{{ item }}
       with_items: architectures
       args:
         creates: /etc/schroot/chroot.d/staging-{{ item }}
-
-    - replace: dest=/etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }} regexp="{{ item[0] }}-{{ item[1] }}-sbuild" replace="{{ item[0] }}-{{ item[1] }}"
-      with_nested:
-        - releases
-        - architectures
 
     - replace: dest=/etc/schroot/chroot.d/{{ item[0] }}-updates-{{ item[1] }} regexp="{{ item[0] }}-{{ item[1] }}-sbuild" replace="{{ item[0] }}-updates-{{ item[1] }}"
       with_nested:
