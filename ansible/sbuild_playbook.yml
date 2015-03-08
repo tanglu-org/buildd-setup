@@ -1,13 +1,12 @@
 ---
 - hosts: all
   vars:
-    stable: bartholomea
     devel: chromodoris
     releases:
-        - "{{ stable }}"
+        - bartholomea
         - "{{ devel }}"
     all_releases:
-        - "{{ stable }}"
+        - bartholomea
         - "{{ devel }}"
         - staging
     mirror: "http://archive.tanglu.org/tanglu"
@@ -17,13 +16,13 @@
   sudo: yes
   tasks:
     - apt: update_cache=yes upgrade=dist
-    - apt: name=devscripts 
+    - apt: name=devscripts
     - apt: name=dpkg-dev
     - apt: name=debootstrap
-    - apt: name=schroot 
-    - apt: name=sbuild 
-    - apt: name=aptitude 
-    - apt: name=lintian 
+    - apt: name=schroot
+    - apt: name=sbuild
+    - apt: name=aptitude
+    - apt: name=lintian
     - apt: name=haveged
     - apt: name=coreutils
 
@@ -39,7 +38,7 @@
         {{ item[0] }}
         /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
         {{ mirror }}
-      with_nested: 
+      with_nested:
         - releases
         - architectures
       args:
@@ -75,30 +74,22 @@
         - [ 'deb', 'deb-src' ]
         - architectures
 
-    - shell: mv /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }}-sbuild-* /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }}
-      with_nested: 
+    - shell: mv /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }}-sbuild-* /etc/schroot/chroot.d/{{ item[0] }}-updates-{{ item[1] }}
+      with_nested:
         - releases
         - architectures
       args:
-        creates: /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }}
+        creates: /etc/schroot/chroot.d/{{ item[0] }}-updates-{{ item[1] }}
 
-    - shell: cp /etc/schroot/chroot.d/{{ stable }}-{{ item }} /etc/schroot/chroot.d/{{ stable }}-updates-{{ item }}
-      with_items: architectures
-      args:
-        creates: /etc/schroot/chroot.d/{{ stable }}-updates-{{ item }}
-
-    - shell: cp /etc/schroot/chroot.d/{{ devel }}-{{ item }} /etc/schroot/chroot.d/staging-{{ item }}
+    - shell: cp /etc/schroot/chroot.d/{{ devel }}-updates-{{ item }} /etc/schroot/chroot.d/staging-{{ item }}
       with_items: architectures
       args:
         creates: /etc/schroot/chroot.d/staging-{{ item }}
 
-    - replace: dest=/etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }} regexp="{{ item[0] }}-{{ item[1] }}-sbuild" replace="{{ item[0] }}-{{ item[1] }}"
+    - replace: dest=/etc/schroot/chroot.d/{{ item[0] }}-updates-{{ item[1] }} regexp="{{ item[0] }}-{{ item[1] }}-sbuild" replace="{{ item[0] }}-updates-{{ item[1] }}"
       with_nested:
         - releases
         - architectures
-
-    - replace: dest=/etc/schroot/chroot.d/{{ stable }}-updates-{{ item }} regexp="{{ stable }}-{{ item }}-sbuild" replace="{{ stable }}-updates-{{ item }}"
-      with_items: architectures
 
     - replace: dest=/etc/schroot/chroot.d/staging-{{ item }} regexp="{{ devel }}-{{ item }}-sbuild" replace="staging-{{ item }}"
       with_items: architectures

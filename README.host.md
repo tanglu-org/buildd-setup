@@ -20,5 +20,5 @@ You need to add a user for remote ssh access and add him to the sudo group
 
 ## LXC
 
-If you are hosting the container on ubuntu, make sure the container config
-contains `lxc.aa_profile = unconfined`
+If you use apparmor on the host, make sure the container config contains
+`lxc.aa_profile = unconfined`
