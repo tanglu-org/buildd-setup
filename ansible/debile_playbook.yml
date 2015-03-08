@@ -17,7 +17,7 @@
   tasks:
     - apt: update_cache=yes upgrade=dist
     - apt: name=git
-    - apt: name=python-dput 
+    - apt: name=python-dput
     - apt: name=python-debian
     - apt: name=python-requests
     - apt: name=python-yaml
