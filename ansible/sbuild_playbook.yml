@@ -4,9 +4,11 @@
     stable: bartholomea
     devel: chromodoris
     releases:
+        - aequorea
         - "{{ stable }}"
         - "{{ devel }}"
     all_releases:
+        - aequorea
         - "{{ stable }}"
         - "{{ devel }}"
         - staging
