@@ -120,6 +120,18 @@
       args:
         removes: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
 
+    - shell: schroot --directory /tmp -c source:{{ item[0] }}-{{ item[1] }} -u root -- apt-get -y install eatmydata && touch /srv/buildd/.ansible-{{ item[0] }}-{{ item[1] }}-eatmydata-installed
+      with_nested:
+        - all_releases
+        - architectures
+      args:
+        creates: /srv/buildd/.ansible-{{ item[0] }}-{{ item[1] }}-eatmydata-installed
+
+    - lineinfile: dest=/etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }} line="command-prefix=eatmydata"
+      with_nested:
+        - all_releases
+        - architectures
+
     - shell: sbuild-update --update --upgrade --clean {{ item[0] }}-{{ item[1] }}
       with_nested:
         - all_releases
