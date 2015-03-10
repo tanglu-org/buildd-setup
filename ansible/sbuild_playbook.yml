@@ -1,13 +1,12 @@
 ---
 - hosts: all
   vars:
-    stable: bartholomea
     devel: chromodoris
     releases:
-        - "{{ stable }}"
+        - bartholomea
         - "{{ devel }}"
     all_releases:
-        - "{{ stable }}"
+        - bartholomea
         - "{{ devel }}"
         - staging
     mirror: "http://192.168.1.6:3142/archive.tanglu.org/tanglu"
@@ -17,14 +16,15 @@
   sudo: yes
   tasks:
     - apt: update_cache=yes upgrade=dist
-    - apt: name=devscripts 
+    - apt: name=devscripts
     - apt: name=dpkg-dev
     - apt: name=debootstrap
-    - apt: name=schroot 
-    - apt: name=sbuild 
-    - apt: name=aptitude 
-    - apt: name=lintian 
+    - apt: name=schroot
+    - apt: name=sbuild
+    - apt: name=aptitude
+    - apt: name=lintian
     - apt: name=haveged
+    - apt: name=coreutils
 
     - user: name=buildd createhome=yes groups=sbuild home=/srv/buildd shell=/bin/bash system=yes
     - file: state=directory path=/srv/buildd/chroots
@@ -38,7 +38,7 @@
         {{ item[0] }}
         /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
         {{ mirror }}
-      with_nested: 
+      with_nested:
         - releases
         - architectures
       args:
@@ -75,29 +75,37 @@
         - architectures
 
     - shell: mv /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }}-sbuild-* /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }}
-      with_nested: 
+      with_nested:
         - releases
         - architectures
       args:
         creates: /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }}
 
-    - shell: cp /etc/schroot/chroot.d/{{ stable }}-{{ item }} /etc/schroot/chroot.d/{{ stable }}-updates-{{ item }}
-      with_items: architectures
+    - shell: cp /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }} /etc/schroot/chroot.d/{{ item[0] }}-updates-{{ item[1] }}
+      with_nested:
+        - releases
+        - architectures
       args:
-        creates: /etc/schroot/chroot.d/{{ stable }}-updates-{{ item }}
+        creates: /etc/schroot/chroot.d/{{ item[0] }}-updates-{{ item[1] }}
 
     - shell: cp /etc/schroot/chroot.d/{{ devel }}-{{ item }} /etc/schroot/chroot.d/staging-{{ item }}
       with_items: architectures
       args:
         creates: /etc/schroot/chroot.d/staging-{{ item }}
 
+    # disable sources in the build chroots
+    - replace: dest={{ item }}/etc/apt/sources.list regexp="^deb-src" replace="#deb-src"
+      with_items: sbuild_chroots.stdout_lines
+
     - replace: dest=/etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }} regexp="{{ item[0] }}-{{ item[1] }}-sbuild" replace="{{ item[0] }}-{{ item[1] }}"
       with_nested:
         - releases
         - architectures
 
-    - replace: dest=/etc/schroot/chroot.d/{{ stable }}-updates-{{ item }} regexp="{{ stable }}-{{ item }}-sbuild" replace="{{ stable }}-updates-{{ item }}"
-      with_items: architectures
+    - replace: dest=/etc/schroot/chroot.d/{{ item[0] }}-updates-{{ item[1] }} regexp="{{ item[0] }}-{{ item[1] }}-sbuild" replace="{{ item[0] }}-updates-{{ item[1] }}"
+      with_nested:
+        - releases
+        - architectures
 
     - replace: dest=/etc/schroot/chroot.d/staging-{{ item }} regexp="{{ devel }}-{{ item }}-sbuild" replace="staging-{{ item }}"
       with_items: architectures
@@ -116,12 +124,30 @@
       args:
         removes: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
 
+    - shell: schroot --directory /tmp -c source:{{ item[0] }}-{{ item[1] }} -u root -- apt-get -y install eatmydata && touch /srv/buildd/.ansible-{{ item[0] }}-{{ item[1] }}-eatmydata-installed
+      with_nested:
+        - all_releases
+        - architectures
+      args:
+        creates: /srv/buildd/.ansible-{{ item[0] }}-{{ item[1] }}-eatmydata-installed
+
+    - lineinfile: dest=/etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }} line="command-prefix=eatmydata"
+      with_nested:
+        - all_releases
+        - architectures
+
     - shell: sbuild-update --update --upgrade --clean {{ item[0] }}-{{ item[1] }}
       with_nested:
         - all_releases
         - architectures
 
-    - template: dest=/etc/sbuild/sbuild.conf src=sbuild/sbuild.conf
+    - name: Get the available CPU count
+      shell: nproc
+      register: ncores
+
+    - template: dest=/etc/sbuild/sbuild.conf src=sbuild/sbuild.conf.j2
+      with_items:
+        - { ncores: "{{ ncores.stdout }}" }
 
     - file: state=directory path=/srv/buildd/.gnupg/ group=buildd owner=buildd
-    - shell: haveged & sudo -u buildd sbuild-update --keygen
+    - shell: haveged & sudo -H -u buildd sbuild-update --keygen

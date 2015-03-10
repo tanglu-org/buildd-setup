@@ -1,13 +1,12 @@
 ---
 - hosts: all
   vars:
-    stable: bartholomea
     devel: chromodoris
     releases:
-        - "{{ stable }}"
+        - bartholomea
         - "{{ devel }}"
     all_releases:
-        - "{{ stable }}"
+        - bartholomea
         - "{{ devel }}"
         - staging
     mirror: "http://archive.tanglu.org/tanglu"
@@ -18,7 +17,7 @@
   tasks:
     - apt: update_cache=yes upgrade=dist
     - apt: name=git
-    - apt: name=python-dput 
+    - apt: name=python-dput
     - apt: name=python-debian
     - apt: name=python-requests
     - apt: name=python-yaml
@@ -37,7 +36,7 @@
         chdir: /srv/buildd/debile-git
       when: debile_git.stat.exists == True
 
-    - shell: git clone git://gitorious.org/tanglu/debile.git debile-git
+    - shell: git clone https://gitlab.com/tanglu/debile.git debile-git
       args:
         chdir: /srv/buildd/
       when: debile_git.stat.exists == False
@@ -55,12 +54,12 @@
 
     - template: dest=/srv/buildd/{{ hostname.stdout }}.sec src=keys/{{ hostname.stdout }}.sec group=buildd owner=buildd mode=0600
 
-    - shell: sudo -u buildd gpg --allow-secret-key-import --import /srv/buildd/{{ hostname.stdout }}.sec && touch /srv/buildd/.ansible-pgp-imported
+    - shell: sudo -H -u buildd gpg --allow-secret-key-import --import /srv/buildd/{{ hostname.stdout }}.sec && touch /srv/buildd/.ansible-pgp-imported
       args:
         creates: /srv/buildd/.ansible-pgp-imported
 
     - name: get the builder PGP fingerprint
-      shell: sudo -u buildd gpg --fingerprint {{ hostname.stdout }}@buildd.tanglu.org | grep fingerprint | cut -f 2 -d = | sed 's/\s*//g'
+      shell: sudo -H -u buildd gpg --fingerprint {{ hostname.stdout }}@buildd.tanglu.org | grep fingerprint | cut -f 2 -d = | sed 's/\s*//g'
       register: gpg_fingerprint
 
     - pip: requirements=/srv/buildd/debile-git/requirements-slave.txt virtualenv=/srv/buildd/debile-git/ENV virtualenv_site_packages=yes
@@ -86,5 +85,11 @@
     - template: dest=/etc/dput.d/metas/tanglu.json src=dput/tanglu_meta.json
 
     - template: dest=/etc/dput.d/profiles/tanglu.json src=dput/tanglu_profile.json
+
+    - stat: path=/etc/rc2.d/S01debile-slave
+      register: debile_service_enabled
+
+    - service: name=debile-slave state=restarted
+      when: debile_service_enabled.stat.exists == True
 
     - shell: update-rc.d debile-slave defaults

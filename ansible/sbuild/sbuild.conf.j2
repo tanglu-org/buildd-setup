@@ -390,7 +390,7 @@ $apt_upgrade = 1;
 #            'CCACHE_DIR' => '/build/cache'
 #    };
 $build_environment = {
-	'DEB_BUILD_OPTIONS' => 'parallel=4',
+	'DEB_BUILD_OPTIONS' => 'parallel={{ item.ncores }}',
         'USER' => 'buildd',
         'USERNAME' => 'buildd'
 };
