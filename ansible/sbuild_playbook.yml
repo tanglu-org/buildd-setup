@@ -13,6 +13,7 @@
     architectures:
         - amd64
         - i386
+    btrfs: False # experimental
   sudo: yes
   tasks:
     - apt: update_cache=yes upgrade=dist
@@ -26,8 +27,23 @@
     - apt: name=haveged
     - apt: name=coreutils
 
+    - apt: name=btrfs-utils
+      when: btrfs
+
     - user: name=buildd createhome=yes groups=sbuild home=/srv/buildd shell=/bin/bash system=yes
+
     - file: state=directory path=/srv/buildd/chroots
+
+    - file: state=directory path=/srv/buildd/snapshots
+      when: btrfs
+
+    - shell: btrfs subvolume create /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
+      with_nested:
+        - releases
+        - architectures
+      args:
+        creates: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
+      when: btrfs
 
     - shell: >
         sbuild-createchroot --arch={{ item[1] }}
@@ -43,6 +59,21 @@
         - architectures
       args:
         creates: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}.tar.gz
+      when: not btrfs
+
+    - shell: >
+        sbuild-createchroot --arch={{ item[1] }}
+        --components="main,contrib,non-free"
+        --include=aptitude
+        {{ item[0] }}
+        /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
+        {{ mirror }}
+      with_nested:
+        - releases
+        - architectures
+      args:
+        creates: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/tmp
+      when: btrfs
 
     - shell: cp -a /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }} /srv/buildd/chroots/staging-{{ item[1] }}
       with_nested:
@@ -50,6 +81,13 @@
         - architectures
       args:
         removes: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
+      when: not btrfs
+
+    - shell: btrfs subvolume snapshot /srv/buildd/chroots/{{ devel }}-{{ item }} /srv/buildd/chroots/staging-{{ item }}
+      with_items: architectures
+      args:
+        creates: /srv/buildd/chroots/staging-{{ item }}
+      when: btrfs
 
     - shell: find /srv/buildd/chroots/* -maxdepth 0 -type d
       register: sbuild_chroots
@@ -63,16 +101,20 @@
     - lineinfile: line=force-unsafe-io dest={{ item }}/etc/dpkg/dpkg.cfg.d/90sbuild create=yes
       with_items: sbuild_chroots.stdout_lines
 
-    - shell: if [ -d /srv/buildd/chroots/{{ item[2] }}-{{ item[1] }} ]; then echo "{{ item[0] }} {{ mirror }} {{ item[2] }}-updates main contrib non-free" >> /srv/buildd/chroots/{{ item[2] }}-{{ item[1] }}/etc/apt/sources.list; fi
+    - shell: echo "{{ item[0] }} {{ mirror }} {{ item[2] }}-updates main contrib non-free" >> /srv/buildd/chroots/{{ item[2] }}-{{ item[1] }}/etc/apt/sources.list && touch /srv/buildd/.ansible-{{ item[2] }}-{{ item[1] }}-updates-{{ item[0] }}-added
       with_nested:
         - [ 'deb', 'deb-src' ]
         - architectures
         - releases
+      args:
+        creates: /srv/buildd/.ansible-{{ item[2] }}-{{ item[1] }}-updates-{{ item[0] }}-added
 
-    - shell: if [ -d /srv/buildd/chroots/staging-{{ item[1] }} ]; then echo "{{ item[0] }} {{ mirror }} staging main contrib non-free" >> /srv/buildd/chroots/staging-{{ item[1] }}/etc/apt/sources.list; fi
+    - shell: echo "{{ item[0] }} {{ mirror }} staging main contrib non-free" >> /srv/buildd/chroots/staging-{{ item[1] }}/etc/apt/sources.list && touch /srv/buildd/.ansible-{{ devel }}-{{ item[1] }}-staging-{{ item[0] }}-added
       with_nested:
         - [ 'deb', 'deb-src' ]
         - architectures
+      args:
+        creates: /srv/buildd/.ansible-{{ devel }}-{{ item[1] }}-staging-{{ item[0] }}-added
 
     - shell: mv /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }}-sbuild-* /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }}
       with_nested:
@@ -80,6 +122,24 @@
         - architectures
       args:
         creates: /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }}
+
+    - replace: dest=/etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }} regexp="^type=directory" replace="type=btrfs-snapshot"
+      with_nested:
+        - releases
+        - architectures
+      when: btrfs
+
+    - replace: dest=/etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }} regexp="^directory=.*$" replace="btrfs-source-subvolume=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}"
+      with_nested:
+        - releases
+        - architectures
+      when: btrfs
+
+    - lineinfile: dest=/etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }} line="btrfs-snapshot-directory=/srv/buildd/snapshots"
+      with_nested:
+        - releases
+        - architectures
+      when: btrfs
 
     - shell: cp /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }} /etc/schroot/chroot.d/{{ item[0] }}-updates-{{ item[1] }}
       with_nested:
@@ -123,6 +183,7 @@
         - architectures
       args:
         removes: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
+      when: not btrfs
 
     - shell: schroot --directory /tmp -c source:{{ item[0] }}-{{ item[1] }} -u root -- apt-get -y install eatmydata && touch /srv/buildd/.ansible-{{ item[0] }}-{{ item[1] }}-eatmydata-installed
       with_nested:
