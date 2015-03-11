@@ -58,7 +58,7 @@
         - releases
         - architectures
       args:
-        creates: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
+        creates: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}.tar.gz
       when: not btrfs
 
     - shell: >
