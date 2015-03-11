@@ -106,7 +106,7 @@
         rm /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}.tar.gz;
         fi
       with_nested:
-        - all_releases
+        - releases
         - architectures
       when: not btrfs
 
