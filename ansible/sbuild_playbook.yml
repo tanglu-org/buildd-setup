@@ -58,7 +58,7 @@
         - releases
         - architectures
       args:
-        creates: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}.tar.gz
+        creates: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
       when: not btrfs
 
     - shell: >
@@ -72,8 +72,43 @@
         - releases
         - architectures
       args:
-        creates: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/tmp
+        creates: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
       when: btrfs
+
+    # remove any existing staging chroot, we'll re-create it
+    - shell: rm /srv/buildd/chroots/staging-{{ item }}.tar.gz
+      with_items: architectures
+      args:
+        removes: /srv/buildd/chroots/staging-{{ item }}.tar.gz
+      when: not btrfs
+
+    - shell: btrfs subvolume delete /srv/buildd/chroots/staging-{{ item }}
+      with_items: architectures
+      args:
+        removes: /srv/buildd/chroots/staging-{{ item }}
+      when: btrfs
+
+    - shell: btrfs subvolume snapshot /srv/buildd/chroots/{{ devel }}-{{ item }} /srv/buildd/chroots/staging-{{ item }}
+      with_items: architectures
+      args:
+        creates: /srv/buildd/chroots/staging-{{ item }}
+      when: btrfs
+
+    - file: state=directory path=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
+      with_nested:
+        - releases
+        - architectures
+
+    # unpack any existing chroots
+    - shell: >
+        if [ -e /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}.tar.gz ]; then
+        tar xf /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}.tar.gz -C /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }};
+        rm /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}.tar.gz;
+        fi
+      with_nested:
+        - all_releases
+        - architectures
+      when: not btrfs
 
     - shell: cp -a /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }} /srv/buildd/chroots/staging-{{ item[1] }}
       with_nested:
@@ -83,38 +118,31 @@
         removes: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
       when: not btrfs
 
-    - shell: btrfs subvolume snapshot /srv/buildd/chroots/{{ devel }}-{{ item }} /srv/buildd/chroots/staging-{{ item }}
-      with_items: architectures
-      args:
-        creates: /srv/buildd/chroots/staging-{{ item }}
-      when: btrfs
-
-    - shell: find /srv/buildd/chroots/* -maxdepth 0 -type d
-      register: sbuild_chroots
-
-    - file: path={{ item }}/dev/ptmx state=absent
-      with_items: sbuild_chroots.stdout_lines
-
-    - file: src=pts/ptmx path={{ item }}/dev/ptmx state=link force=yes
-      with_items: sbuild_chroots.stdout_lines
-
-    - lineinfile: line=force-unsafe-io dest={{ item }}/etc/dpkg/dpkg.cfg.d/90sbuild create=yes
-      with_items: sbuild_chroots.stdout_lines
-
-    - shell: echo "{{ item[0] }} {{ mirror }} {{ item[2] }}-updates main contrib non-free" >> /srv/buildd/chroots/{{ item[2] }}-{{ item[1] }}/etc/apt/sources.list && touch /srv/buildd/.ansible-{{ item[2] }}-{{ item[1] }}-updates-{{ item[0] }}-added
+    - file: path=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/dev/ptmx state=absent
       with_nested:
-        - [ 'deb', 'deb-src' ]
+        - all_releases
+        - architectures
+
+    - file: src=pts/ptmx path=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/dev/ptmx state=link force=yes
+      with_nested:
+        - all_releases
+        - architectures
+
+    - lineinfile: line=force-unsafe-io dest=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/etc/dpkg/dpkg.cfg.d/90sbuild create=yes
+      with_nested:
+        - all_releases
+        - architectures
+
+    - lineinfile: line="{{ item[0] }} {{ mirror }} {{ item[2] }}-updates main contrib non-free" dest=/srv/buildd/chroots/{{ item[2] }}-{{ item[1] }}/etc/apt/sources.list
+      with_nested:
+        - [ 'deb', '#deb-src' ]
         - architectures
         - releases
-      args:
-        creates: /srv/buildd/.ansible-{{ item[2] }}-{{ item[1] }}-updates-{{ item[0] }}-added
 
-    - shell: echo "{{ item[0] }} {{ mirror }} staging main contrib non-free" >> /srv/buildd/chroots/staging-{{ item[1] }}/etc/apt/sources.list && touch /srv/buildd/.ansible-{{ devel }}-{{ item[1] }}-staging-{{ item[0] }}-added
+    - lineinfile: line="{{ item[0] }} {{ mirror }} staging main contrib non-free" dest=/srv/buildd/chroots/staging-{{ item[1] }}/etc/apt/sources.list
       with_nested:
-        - [ 'deb', 'deb-src' ]
+        - [ 'deb', '#deb-src' ]
         - architectures
-      args:
-        creates: /srv/buildd/.ansible-{{ devel }}-{{ item[1] }}-staging-{{ item[0] }}-added
 
     - shell: mv /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }}-sbuild-* /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }}
       with_nested:
@@ -154,8 +182,10 @@
         creates: /etc/schroot/chroot.d/staging-{{ item }}
 
     # disable sources in the build chroots
-    - replace: dest={{ item }}/etc/apt/sources.list regexp="^deb-src" replace="#deb-src"
-      with_items: sbuild_chroots.stdout_lines
+    - replace: dest=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/etc/apt/sources.list regexp="^deb-src" replace="#deb-src"
+      with_nested:
+        - all_releases
+        - architectures
 
     - replace: dest=/etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }} regexp="{{ item[0] }}-{{ item[1] }}-sbuild" replace="{{ item[0] }}-{{ item[1] }}"
       with_nested:
