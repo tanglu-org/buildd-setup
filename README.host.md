@@ -13,6 +13,7 @@ Additional packages to install before provisioning:
 - python
 - debootstrap from archive.tanglu.org
 - tanglu-archive-keyring from archive.tanglu.org
+- lintian from archive.tanglu.org
 
 You need to add a user for remote ssh access and add him to the sudo group
 
