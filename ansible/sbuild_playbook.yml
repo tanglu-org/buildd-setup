@@ -133,6 +133,11 @@
         - all_releases
         - architectures
 
+    - lineinfile: line='Acquire::PDiffs "false";' dest=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/etc/apt/apt.conf.d/00pdiff create=yes
+      with_nested:
+        - all_releases
+        - architectures
+
     - lineinfile: line="{{ item[0] }} {{ mirror }} {{ item[2] }}-updates main contrib non-free" dest=/srv/buildd/chroots/{{ item[2] }}-{{ item[1] }}/etc/apt/sources.list
       with_nested:
         - [ 'deb', '#deb-src' ]
