@@ -40,7 +40,7 @@ Create a debile xmlrpc ssl key and cert:
  ```
  openssl req -utf8 -nodes -newkey rsa:4096 -sha256 -x509 -days 7300 \
  -subj "/C=NT/O=Tanglu Project/OU=Package Build Service/CN=<element>/emailAddress=<element>@buildd.tanglu.org" \
- -keyout /srv/buildd/<element>.key -out /srv/buildd/<element>.crt && \
+ -keyout <element>.key -out <element>.crt && \
  chmod go-rwx *.key
  ```
 
