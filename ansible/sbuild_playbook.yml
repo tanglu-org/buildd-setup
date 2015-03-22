@@ -27,7 +27,7 @@
     - apt: name=haveged
     - apt: name=coreutils
 
-    - apt: name=btrfs-utils
+    - apt: name=btrfs-tools
       when: btrfs
 
     - user: name=buildd createhome=yes groups=sbuild home=/srv/buildd shell=/bin/bash system=yes
@@ -72,7 +72,7 @@
         - releases
         - architectures
       args:
-        creates: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
+        creates: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/tmp
       when: btrfs
 
     # remove any existing staging chroot, we'll re-create it
@@ -220,12 +220,10 @@
         removes: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
       when: not btrfs
 
-    - shell: schroot --directory /tmp -c source:{{ item[0] }}-{{ item[1] }} -u root -- apt-get -y install eatmydata && touch /srv/buildd/.ansible-{{ item[0] }}-{{ item[1] }}-eatmydata-installed
+    - shell: schroot --directory /tmp -c source:{{ item[0] }}-{{ item[1] }} -u root -- apt-get -y install eatmydata
       with_nested:
         - all_releases
         - architectures
-      args:
-        creates: /srv/buildd/.ansible-{{ item[0] }}-{{ item[1] }}-eatmydata-installed
 
     - lineinfile: dest=/etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }} line="command-prefix=eatmydata"
       with_nested:
