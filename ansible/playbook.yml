@@ -12,4 +12,5 @@
 
 - include: sbuild_playbook.yml
 - include: debile_playbook.yml
+- include: supervisor_playbook.yml
 - include: user_playbook.yml

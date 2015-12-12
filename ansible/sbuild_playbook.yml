@@ -1,12 +1,14 @@
 ---
 - hosts: all
   vars:
-    devel: chromodoris
+    devel: dasyatis
     releases:
         - bartholomea
+        - chromodoris
         - "{{ devel }}"
     all_releases:
         - bartholomea
+        - chromodoris
         - "{{ devel }}"
         - staging
     mirror: "http://archive.tanglu.org/tanglu"
