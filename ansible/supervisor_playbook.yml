@@ -1,0 +1,10 @@
+---
+- hosts: all
+  sudo: yes
+  tasks:
+    - apt: update_cache=yes upgrade=dist
+    - apt: name=supervisor
+
+    - template: dest=/etc/supervisor/conf.d/debile-slave.conf src=supervisor/debile-slave.conf
+
+    - service: name=supervisor state=restarted
