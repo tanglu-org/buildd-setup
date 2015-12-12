@@ -11,6 +11,7 @@ Requires at least jessie
 Additional packages to install before provisioning:
 - sudo
 - python
+- openssh-sftp-server
 - debootstrap from archive.tanglu.org
 - tanglu-archive-keyring from archive.tanglu.org
 - lintian from archive.tanglu.org
