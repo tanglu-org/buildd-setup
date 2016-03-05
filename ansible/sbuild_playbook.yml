@@ -3,13 +3,9 @@
   vars:
     devel: dasyatis
     releases:
-        - aequorea
-        - bartholomea
         - chromodoris
         - "{{ devel }}"
     all_releases:
-        - aequorea
-        - bartholomea
         - chromodoris
         - "{{ devel }}"
         - staging
