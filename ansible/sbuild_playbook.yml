@@ -1,14 +1,16 @@
 ---
 - hosts: all
   vars:
-    devel: chromodoris
+    devel: dasyatis
     releases:
         - aequorea
         - bartholomea
+        - chromodoris
         - "{{ devel }}"
     all_releases:
         - aequorea
         - bartholomea
+        - chromodoris
         - "{{ devel }}"
         - staging
     mirror: "http://192.168.1.6:3142/archive.tanglu.org/tanglu"
