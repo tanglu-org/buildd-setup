@@ -449,7 +449,7 @@ $build_environment = {
 # more complex situations, such as where multiple distributions are
 # required, for example when building from experimental, where packages are
 # needed from both unstable and experimental, but defaulting to unstable.
-$build_dep_resolver = 'aptitude';
+$build_dep_resolver = 'apt';
 
 # RESOLVE_ALTERNATIVES
 # Type: BOOL
@@ -464,7 +464,6 @@ $build_dep_resolver = 'aptitude';
 # experimental or backports.  Set to undef to use the default, 1 to enable,
 # or 0 to disable.
 #    $resolve_alternatives = 0;
-$resolve_alternatives = 1;
 
 # SBUILD_BUILD_DEPENDS_PUBLIC_KEY
 # Type: STRING
