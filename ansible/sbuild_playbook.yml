@@ -6,10 +6,6 @@
         - bartholomea
         - chromodoris
         - "{{ devel }}"
-    all_releases:
-        - bartholomea
-        - chromodoris
-        - "{{ devel }}"
         - staging
     mirror: "http://archive.tanglu.org/tanglu"
     architectures:
@@ -77,25 +73,6 @@
         creates: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/tmp
       when: btrfs
 
-    # remove any existing staging chroot, we'll re-create it
-    - shell: rm /srv/buildd/chroots/staging-{{ item }}.tar.gz
-      with_items: architectures
-      args:
-        removes: /srv/buildd/chroots/staging-{{ item }}.tar.gz
-      when: not btrfs
-
-    - shell: btrfs subvolume delete /srv/buildd/chroots/staging-{{ item }}
-      with_items: architectures
-      args:
-        removes: /srv/buildd/chroots/staging-{{ item }}
-      when: btrfs
-
-    - shell: btrfs subvolume snapshot /srv/buildd/chroots/{{ devel }}-{{ item }} /srv/buildd/chroots/staging-{{ item }}
-      with_items: architectures
-      args:
-        creates: /srv/buildd/chroots/staging-{{ item }}
-      when: btrfs
-
     - file: state=directory path=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
       with_nested:
         - releases
@@ -112,41 +89,34 @@
         - architectures
       when: not btrfs
 
-    - shell: cp -a /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }} /srv/buildd/chroots/staging-{{ item[1] }}
-      with_nested:
-        - [ "{{ devel }}" ]
-        - architectures
-      args:
-        removes: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
-      when: not btrfs
-
     - file: path=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/dev/ptmx state=absent
       with_nested:
-        - all_releases
+        - releases
         - architectures
 
     - file: src=pts/ptmx path=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/dev/ptmx state=link force=yes
       with_nested:
-        - all_releases
+        - releases
         - architectures
 
     - lineinfile: line=force-unsafe-io dest=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/etc/dpkg/dpkg.cfg.d/90sbuild create=yes
       with_nested:
-        - all_releases
+        - releases
         - architectures
 
     - lineinfile: line='Acquire::PDiffs "false";' dest=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/etc/apt/apt.conf.d/00pdiff create=yes
       with_nested:
-        - all_releases
+        - releases
         - architectures
 
     - lineinfile: line="{{ item[0] }} {{ mirror }} {{ item[2] }}-updates main contrib non-free" dest=/srv/buildd/chroots/{{ item[2] }}-{{ item[1] }}/etc/apt/sources.list
+      when: item[2] != 'staging'
       with_nested:
         - [ 'deb', '#deb-src' ]
         - architectures
         - releases
 
-    - lineinfile: line="{{ item[0] }} {{ mirror }} staging main contrib non-free" dest=/srv/buildd/chroots/staging-{{ item[1] }}/etc/apt/sources.list
+    - lineinfile: line="{{ item[0] }} http://buildd.tanglu.net/build-queues buildq-staging main contrib non-free" dest=/srv/buildd/chroots/staging-{{ item[1] }}/etc/apt/sources.list
       with_nested:
         - [ 'deb', '#deb-src' ]
         - architectures
@@ -177,21 +147,17 @@
       when: btrfs
 
     - shell: cp /etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }} /etc/schroot/chroot.d/{{ item[0] }}-updates-{{ item[1] }}
+      when: item[0] != 'staging'
       with_nested:
         - releases
         - architectures
       args:
         creates: /etc/schroot/chroot.d/{{ item[0] }}-updates-{{ item[1] }}
 
-    - shell: cp /etc/schroot/chroot.d/{{ devel }}-{{ item }} /etc/schroot/chroot.d/staging-{{ item }}
-      with_items: architectures
-      args:
-        creates: /etc/schroot/chroot.d/staging-{{ item }}
-
     # disable sources in the build chroots
     - replace: dest=/srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}/etc/apt/sources.list regexp="^deb-src" replace="#deb-src"
       with_nested:
-        - all_releases
+        - releases
         - architectures
 
     - replace: dest=/etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }} regexp="{{ item[0] }}-{{ item[1] }}-sbuild" replace="{{ item[0] }}-{{ item[1] }}"
@@ -200,15 +166,10 @@
         - architectures
 
     - replace: dest=/etc/schroot/chroot.d/{{ item[0] }}-updates-{{ item[1] }} regexp="{{ item[0] }}-{{ item[1] }}-sbuild" replace="{{ item[0] }}-updates-{{ item[1] }}"
+      when: item[0] != 'staging'
       with_nested:
         - releases
         - architectures
-
-    - replace: dest=/etc/schroot/chroot.d/staging-{{ item }} regexp="{{ devel }}-{{ item }}-sbuild" replace="staging-{{ item }}"
-      with_items: architectures
-
-    - replace: dest=/etc/schroot/chroot.d/staging-{{ item }} regexp="{{ devel }}" replace="staging"
-      with_items: architectures
 
     # workaround for https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=769289
     - lineinfile: dest=/etc/schroot/chroot.d/staging-{{ item }} line="profile=sbuild"
@@ -216,7 +177,7 @@
 
     - shell: tar caf /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}.tar.gz -C /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }} . && rm -r /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
       with_nested:
-        - all_releases
+        - releases
         - architectures
       args:
         removes: /srv/buildd/chroots/{{ item[0] }}-{{ item[1] }}
@@ -224,17 +185,17 @@
 
     - shell: schroot --directory /tmp -c source:{{ item[0] }}-{{ item[1] }} -u root -- apt-get -y install eatmydata
       with_nested:
-        - all_releases
+        - releases
         - architectures
 
     - lineinfile: dest=/etc/schroot/chroot.d/{{ item[0] }}-{{ item[1] }} line="command-prefix=eatmydata"
       with_nested:
-        - all_releases
+        - releases
         - architectures
 
     - shell: sbuild-update --update --upgrade --clean {{ item[0] }}-{{ item[1] }}
       with_nested:
-        - all_releases
+        - releases
         - architectures
 
     - name: Get the available CPU count
