@@ -116,7 +116,7 @@
         - architectures
         - releases
 
-    - lineinfile: line="{{ item[0] }} http://buildd.tanglu.net/build-queues buildq-staging main contrib non-free" dest=/srv/buildd/chroots/staging-{{ item[1] }}/etc/apt/sources.list
+    - lineinfile: line="{{ item[0] }} http://buildd.tanglu.org/build-queues buildq-staging main contrib non-free" dest=/srv/buildd/chroots/staging-{{ item[1] }}/etc/apt/sources.list
       with_nested:
         - [ 'deb', '#deb-src' ]
         - architectures
